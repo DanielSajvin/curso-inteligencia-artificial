@@ -14,6 +14,7 @@ venv/
 *.whl
 pip-log.txt
 pip-delete-this-directory.txt
+entornoJupyter/
 
 # Configuraciones de Jupyter
 .ipynb_checkpoints/
