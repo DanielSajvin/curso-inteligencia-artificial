@@ -24,7 +24,16 @@ def palm_normal(lm):
 
 def palma_hacia_camara(lm, umbral=-0.2):
     n = palm_normal(lm)
-    return n[2] < umbral  # más negativo ⇒ más de frente
+    return n[2] < umbral
+
+
+def direccion_indice(lm, delta=0.05):
+    if lm[8].x < lm[0].x - delta:
+        return "izquierda"
+    elif lm[8].x > lm[0].x + delta:
+        return "derecha"
+    else:
+        return None
 
 
 # Funcion para determinar si un dedo esta levantado
@@ -54,8 +63,20 @@ def dedos_levantados(landmarks, umbral=0.1):
 
 
 def detectar_gesto(dedos, lm):
-    # Gestos predefinidos
-    # Gesto "Alto": todos los dedos levantados, pero además el pulgar debe estar separado del índice (distancia grande)
+    indice_ext = dedos["Indice"]
+    pulgar_abierto = dedos["Pulgar"]
+    otros_cerrados = not any([dedos["Medio"], dedos["Anular"], dedos["Menique"]])
+    mano_plana = (
+        abs(lm[0].z - lm[9].z) < 0.07
+    )  # muñeca y centro de palma casi al mismo Z
+    dir_idx = direccion_indice(lm)
+
+    # para detectar corazon coreano
+    pulgar_doblado = lm[4].y > lm[3].y
+    indice_doblado = lm[8].y > lm[6].y
+    puntas_cerca = distancia(lm[4], lm[8]) < 0.04
+    otros_cerrados = not any([dedos["Medio"], dedos["Anular"], dedos["Menique"]])
+
     if all(dedos.values()) and distancia(landmarks[4], landmarks[8]) > 0.18:
         return "Mano Abierta ✋"
     if (
@@ -64,6 +85,10 @@ def detectar_gesto(dedos, lm):
         and not any([dedos["Pulgar"], dedos["Anular"], dedos["Menique"]])
     ):
         return "Victoria ✌️"
+    if pulgar_doblado and indice_doblado and puntas_cerca and otros_cerrados:
+        # opcional: exigir palma hacia la cámara
+        if palma_hacia_camara(lm, umbral=-0.1):
+            return "Corazón Coreano 💖"
 
     elif dedos["Pulgar"] and not any(
         [dedos["Indice"], dedos["Medio"], dedos["Anular"], dedos["Menique"]]
@@ -95,9 +120,6 @@ def detectar_gesto(dedos, lm):
         and not any([dedos["Medio"], dedos["Anular"]])
     ):
         return "Te Quiero 🤟"
-    # Saludo Vulcano: todos los dedos levantados, pero con separación significativa entre medio y anular,
-    # Saludo Vulcano: todos los dedos levantados, pero con separación significativa SOLO entre medio y anular,
-    # y además la separación entre índice-medio y anular-meñique debe ser pequeña (para evitar confusión con mano abierta)
     elif (
         all(dedos.values())
         and distancia(landmarks[12], landmarks[16])
@@ -107,6 +129,11 @@ def detectar_gesto(dedos, lm):
         and distancia(landmarks[4], landmarks[8]) > 0.10  # pulgar separado del índice
     ):
         return "Saludo Vulcano 🖖"
+    if indice_ext and pulgar_abierto and otros_cerrados and mano_plana and dir_idx:
+        if dir_idx == "izquierda":
+            return "Señalar Izquierda 👈"
+        else:
+            return "Señalar Derecha 👉"
         # ─── Mano cerrada / Puño ───
     mano_cerrada = not any(dedos.values())
 
@@ -114,6 +141,25 @@ def detectar_gesto(dedos, lm):
         return "Puño 👊"
     elif mano_cerrada:
         return "Mano Cerrada ✊"
+    elif (
+        dedos["Indice"]
+        and dedos["Pulgar"]
+        and not any([dedos["Medio"], dedos["Anular"], dedos["Menique"]])
+        and 0.1 <= distancia(landmarks[4], landmarks[8]) <= 0.18
+        and distancia(landmarks[8], landmarks[12]) > 0.06  # índice y medio separados
+        and distancia(landmarks[4], landmarks[12]) > 0.10  # pulgar y medio separados
+        and not palma_hacia_camara(lm, umbral=-0.3)  # palma no completamente de frente
+    ):
+        return "Pinza 🤏"
+    # Señalar Izquierda: índice y pulgar levantados, índice apuntando a la izquierda
+    elif (
+        dedos["Indice"]
+        and dedos["Pulgar"]
+        and not any([dedos["Medio"], dedos["Anular"], dedos["Menique"]])
+        and (landmarks[8].x < landmarks[6].x)  # índice apunta a la izquierda
+        and (landmarks[4].y > landmarks[3].y)  # pulgar hacia arriba
+    ):
+        return "Señalar Izquierda 👈"
 
     else:
         return "Gestos no reconocidos"
