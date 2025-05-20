@@ -5,12 +5,12 @@ library(neuralnet)
 # cargar datos
 datos = iris
 
-# separación en grupo de entrenamiento y pruebas
+# separacion en grupo de entrenamiento y pruebas
 muestra = createDataPartition(datos$Species, p=0.8, list=F)
 train = datos[muestra,]
 test = datos[-muestra,]
 
-# análisis exploratorio
+# anï¿½lisis exploratorio
 head(train, 5)
 tail(train, 4)
 train[6:10,]
@@ -20,7 +20,7 @@ hist(sepal_length)
 # entrenamiento de la red neuronal 
 red.neuronal = neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data=train, hidden=c(2,3))
 
-# visualizar la función de activación
+# visualizar la funciï¿½n de activaciï¿½n
 red.neuronal$act.fct
 
 # visualizar la red neuronal 
