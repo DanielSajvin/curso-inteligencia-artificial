@@ -10,7 +10,7 @@ muestra = createDataPartition(datos$Species, p=0.8, list=F)
 train = datos[muestra,]
 test = datos[-muestra,]
 
-# an�lisis exploratorio
+# analisis exploratorio
 head(train, 5)
 tail(train, 4)
 train[6:10,]
@@ -20,7 +20,7 @@ hist(sepal_length)
 # entrenamiento de la red neuronal 
 red.neuronal = neuralnet(Species ~ Sepal.Length + Sepal.Width + Petal.Length + Petal.Width, data=train, hidden=c(2,3))
 
-# visualizar la funci�n de activaci�n
+# visualizar la funcion de activacion
 red.neuronal$act.fct
 
 # visualizar la red neuronal 
